@@ -40,23 +40,22 @@ pub fn parse_http_request<R: BufRead>(reader: &mut R) -> Result<HttpRequest, Htt
         Some(header) => header.parse().unwrap_or(0),
         None => 0,
     };
-    /*
+
     let mut body_buffer: Vec<u8> = vec![0, content_length as u8];
 
     if reader.read_to_end(&mut body_buffer).is_err() {
         return Err(HttpParseError::ReadBodyError);
     }
 
-    let body = reader
-    .lines()
-    .map(|line| line.unwrap_or(String::new()))
-    .collect::<String>();*/
+    let body = String::from_utf8(body_buffer)
+        .unwrap_or(String::new())
+        .replace("\0\u{f}", "");
 
     return Ok(HttpRequest {
         method: method,
         path: path,
         headers: headers,
-        body: String::new(),
+        body: body,
     });
 }
 
