@@ -6,11 +6,9 @@ use std::{
 use crate::http::http_request::parse_http_request;
 
 pub fn start_http_server(port: u16) {
-    println!("Starting http server on {}", format!("127.0.0.1:{}", port));
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).unwrap();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        println!("new connection from {}", stream.peer_addr().unwrap());
         handle_connection(stream);
     }
 }

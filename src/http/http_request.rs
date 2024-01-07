@@ -48,15 +48,15 @@ pub fn parse_http_request<R: BufRead>(reader: &mut R) -> Result<HttpRequest, Htt
     }
 
     let body = String::from_utf8(body_buffer)
-        .unwrap_or(String::new())
+        .unwrap_or_default()
         .replace("\0\u{f}", "");
 
-    return Ok(HttpRequest {
-        method: method,
-        path: path,
-        headers: headers,
-        body: body,
-    });
+    Ok(HttpRequest {
+        method,
+        path,
+        headers,
+        body,
+    })
 }
 
 /// HTTP defines a set of request methods to indicate the desired action to be performed for a given resource.
@@ -87,39 +87,34 @@ fn http_request_method_from_string(s: &str) -> HttpRequestMethod {
         "CONNECT" => HttpRequestMethod::Connect,
         "OPTIONS" => HttpRequestMethod::Options,
         "TRACE" => HttpRequestMethod::Trace,
-        "Patch" => HttpRequestMethod::Patch,
+        "PATCH" => HttpRequestMethod::Patch,
         _ => HttpRequestMethod::Get,
     };
 }
 
 fn parse_http_start_line(s: String) -> (HttpRequestMethod, String) {
-    let mut parts = s.split(" ");
+    let mut parts = s.split(' ');
     let method = match parts.next() {
         Some(method_str) => http_request_method_from_string(method_str),
         None => HttpRequestMethod::Get,
     };
-    let path = match parts.next() {
-        Some(path) => path,
-        None => "/",
-    };
-    return (method, path.to_string());
+    let path = parts.next().unwrap_or("/");
+    (method, path.to_string())
 }
 
 /// Parses an http_header from the given String.
 /// Returns the name and value of the parsed header or None if the header could not be parsed.
 fn parse_http_header(s: String) -> Option<(String, String)> {
     let mut parts = s.split(": ");
-    let name: String;
-    let value: String;
-    match parts.next() {
-        Some(part) => name = part.to_string(),
+    let name = match parts.next() {
+        Some(part) => part.to_string(),
         None => return None,
-    }
-    match parts.next() {
-        Some(part) => value = part.to_string(),
+    };
+    let value = match parts.next() {
+        Some(part) => part.to_string(),
         None => return None,
-    }
-    return Some((name, value));
+    };
+    Some((name, value))
 }
 
 #[cfg(test)]
